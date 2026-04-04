@@ -1,0 +1,112 @@
+# =================================================
+# Python
+# =================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# =================================================
+# IDE
+# =================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# =================================================
+# Project Specific
+# =================================================
+# Data directories
+data/raw/
+data/original/
+data/temp/
+data/train/
+data/val/
+data/test/
+data/*.zip
+data/*.tar.gz
+
+# Large files
+*.pt
+*.pth
+*.onnx
+*.pb
+*.h5
+*.tflite
+*.pkl
+*.pickle
+
+# Images and videos
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+*.mov
+*.flv
+
+# Outputs
+outputs/
+runs/
+results/
+predictions/
+logs/
+*.log
+*.json
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+.cache/
+RUFF_CONFIG_NOTES.md
+PROJECT_COMPLETION_REPORT.md
+CHECKLIST.md
+CONFIG_CONSISTENCY_IMPROVEMENT.md
+
+# =================================================
+# OS
+# =================================================
+.DS_Store
+Thumbs.db
+.keep
+
+# =================================================
+# Custom
+# =================================================
+custom_config.yaml
+batch_predictions.json
+test_image.jpg
+raw/
