@@ -23,21 +23,27 @@ def setup_parser():
     """Setup command line argument parser"""
     parser = argparse.ArgumentParser(
         prog="yolo-tmr",
-        description="YOLO Traffic Mark Recognition - Training and Deployment Acceleration",
+        description="YOLO Traffic Mark Recognition - Training and Deployment",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Prepare dataset
-  python main.py prepare-data --data-dir data --split --images-dir raw/images --labels-dir raw/labels
-
   # Train model
   python main.py train --config configs/default.yaml --epochs 100
 
   # Run inference
   python main.py predict --model-path outputs/weights/best.pt --source test.jpg
 
-  # Quick validation
-  python main.py train --config configs/quick.yaml
+  # Validate model
+  python main.py validate --model-path outputs/weights/best.pt
+
+  # Export model
+  python main.py export --model-path outputs/weights/best.pt --format onnx
+
+  # Show configuration
+  python main.py info --config configs/default.yaml
+
+  # For data preprocessing, use:
+  #   python preprocess.py --help
         """,
     )
 
@@ -110,67 +116,6 @@ Examples:
         "--visualize", action="store_true", help="Visualize predictions"
     )
 
-    # ==================== Prepare Data Command ====================
-    data_parser = subparsers.add_parser("prepare-data", help="Prepare dataset")
-    data_parser.add_argument(
-        "--data-dir", type=str, default="data", help="Root data directory"
-    )
-    data_parser.add_argument(
-        "--num-classes", type=int, default=43, help="Number of classes"
-    )
-    data_parser.add_argument(
-        "--split", action="store_true", help="Split dataset into train/val/test"
-    )
-    data_parser.add_argument(
-        "--images-dir",
-        type=str,
-        default=None,
-        help="Source images directory (for --split)",
-    )
-    data_parser.add_argument(
-        "--labels-dir",
-        type=str,
-        default=None,
-        help="Source labels directory (for --split)",
-    )
-    data_parser.add_argument(
-        "--train-ratio", type=float, default=0.8, help="Training set ratio"
-    )
-    data_parser.add_argument(
-        "--val-ratio", type=float, default=0.1, help="Validation set ratio"
-    )
-    data_parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Force overwrite data.yaml if it exists (use with caution!)",
-    )
-
-    # ==================== Validate Command ====================
-    validate_parser = subparsers.add_parser("validate", help="Validate model")
-    validate_parser.add_argument(
-        "--model-path", "-m", type=str, required=True, help="Path to model weights"
-    )
-    validate_parser.add_argument(
-        "--data-yaml",
-        type=str,
-        default="configs/data.yaml",
-        help="Path to data.yaml file",
-    )
-
-    # ==================== Export Command ====================
-    export_parser = subparsers.add_parser("export", help="Export model")
-    export_parser.add_argument(
-        "--model-path", "-m", type=str, required=True, help="Path to model weights"
-    )
-    export_parser.add_argument(
-        "--format",
-        "-f",
-        type=str,
-        choices=["onnx", "torchscript", "tflite", "pb", "saved_model"],
-        default="onnx",
-        help="Export format",
-    )
-
     # ==================== Info Command ====================
     info_parser = subparsers.add_parser("info", help="Show configuration")
     info_parser.add_argument(
@@ -215,7 +160,7 @@ def cmd_train(args, logger):
 
     if train_count == 0 or val_count == 0:
         logger.error("Dataset not properly set up!")
-        logger.error("Please run: python main.py prepare-data --help")
+        logger.error("Please run: python preprocess.py split-dataset --help")
         return 1
 
     # Train
@@ -248,46 +193,6 @@ def cmd_predict(args, logger):
     if args.output:
         predictor.save_predictions(predictions, args.output)
         logger.info(f"Predictions saved to {args.output}")
-
-    return 0
-
-
-def cmd_prepare_data(args, logger):
-    """Prepare data command handler"""
-    dataset_manager = DatasetManager(
-        data_dir=args.data_dir, num_classes=args.num_classes
-    )
-
-    logger.info("Creating YOLO dataset structure...")
-    # Pass force flag to create_yolo_structure
-    force = getattr(args, "force", False)
-    dataset_manager.create_yolo_structure(force=force)
-
-    if args.split:
-        if not args.images_dir or not args.labels_dir:
-            logger.error("--images-dir and --labels-dir are required for --split")
-            return 1
-
-        logger.info("Splitting dataset...")
-        dataset_manager.split_dataset(
-            images_dir=args.images_dir,
-            labels_dir=args.labels_dir,
-            train_ratio=args.train_ratio,
-            val_ratio=args.val_ratio,
-            test_ratio=1.0 - args.train_ratio - args.val_ratio,
-        )
-
-    logger.info("Verifying dataset...")
-    train_count, val_count, test_count = dataset_manager.verify_dataset()
-
-    logger.info("\n" + "=" * 60)
-    logger.info("✅ Dataset prepared successfully!")
-    logger.info("=" * 60)
-    logger.info(f"  Training samples:   {train_count}")
-    logger.info(f"  Validation samples: {val_count}")
-    logger.info(f"  Test samples:       {test_count}")
-    logger.info("\n  Next step: python main.py train --config configs/default.yaml")
-    logger.info("=" * 60)
 
     return 0
 
@@ -348,7 +253,7 @@ def main():
     logger = setup_logger(name="yolo-tmr", log_file="outputs/logs/yolo-tmr.log")
 
     logger.info("=" * 60)
-    logger.info("YOLO Traffic Sign Recognition")
+    logger.info("YOLO Traffic Sign Recognition - Training & Inference")
     logger.info("=" * 60)
 
     # Handle commands
@@ -356,8 +261,6 @@ def main():
         return cmd_train(args, logger)
     elif args.command == "predict":
         return cmd_predict(args, logger)
-    elif args.command == "prepare-data":
-        return cmd_prepare_data(args, logger)
     elif args.command == "validate":
         return cmd_validate(args, logger)
     elif args.command == "export":

@@ -1,0 +1,21 @@
+# Universal Pipeline Configuration
+# 统一的数据处理流程配置
+
+pipeline:
+  # 启用的处理步骤（顺序执行）
+  enabled_steps:
+    - video_extraction      # 1. 从视频提取关键帧
+    - image_cleaning        # 2. 清洗图片
+    - image_normalization   # 3. 重命名图片
+    # - prepare_dataset     # 4. (可选) 准备YOLO数据集
+
+  # 目录配置
+  raw_dir: ./raw
+  output_dir: ./data
+  
+  # 缓存和日志
+  temp_cache_file: ./raw/temp.json
+  report_dir: ./outputs/pipeline_reports
+  
+  # 日志级别
+  log_level: info          # debug, info, warning, error

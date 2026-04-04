@@ -1,8 +1,10 @@
 """
 Configuration management for YOLO-TMR project
+支持灵活的YAML配置加载(单文件或多文件合并)
 """
 
 import os
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -137,3 +139,123 @@ class Config:
     def __str__(self) -> str:
         """String representation"""
         return yaml.dump(self.to_dict(), default_flow_style=False, allow_unicode=True)
+
+
+class ConfigManager:
+    """
+    灵活的配置管理器, 支持多个YAML文件的加载和合并
+    用于支持新的数据处理流程配置
+    """
+
+    def __init__(self, project_root: Path | None = None):
+        """
+        初始化配置管理器
+
+        Args:
+            project_root: 项目根目录
+        """
+        self.project_root = project_root or Path(__file__).parent.parent
+        self.configs_dir = self.project_root / "configs"
+        self.config_dict = {}
+
+    def load_yaml(self, yaml_path: str | Path) -> dict:
+        """
+        加载单个YAML文件
+
+        Args:
+            yaml_path: YAML文件路径
+
+        Returns:
+            解析后的配置字典
+        """
+        filepath = Path(yaml_path)
+        if not filepath.is_absolute():
+            filepath = self.configs_dir / filepath
+
+        if not filepath.exists():
+            raise FileNotFoundError(f"Configuration file not found: {filepath}")
+
+        with open(filepath, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+
+    def load_multiple(self, config_files: Sequence[str | Path]) -> dict:
+        """
+        加载多个YAML文件并合并
+
+        Args:
+            config_files: YAML文件路径列表
+
+        Returns:
+            合并后的配置字典
+        """
+        merged_config = {}
+
+        for config_file in config_files:
+            config = self.load_yaml(config_file)
+            merged_config.update(config)
+
+        return merged_config
+
+    def load_pipeline_config(self, base_config: str = "pipeline.yaml") -> dict:
+        """
+        加载完整的流程配置(合并多个文件)
+
+        Args:
+            base_config: 基础配置文件(指定要加载的其他模块配置)
+
+        Returns:
+            完整的合并配置
+        """
+        # 加载基础配置
+        base = self.load_yaml(base_config)
+
+        # 根据base中的enabled_steps, 加载对应的模块配置
+        configs_to_load = [base_config]  # 必须加载基础配置
+
+        pipeline = base.get("pipeline", {})
+        enabled_steps = pipeline.get("enabled_steps", [])
+
+        # 映射步骤到配置文件
+        step_to_file = {
+            "video_extraction": "video_extraction.yaml",
+            "image_cleaning": "image_cleaning.yaml",
+            "image_normalization": "normalization.yaml",
+            "prepare_dataset": "data_preparation.yaml",
+        }
+
+        for step in enabled_steps:
+            if step in step_to_file:
+                config_file = step_to_file[step]
+                if (self.configs_dir / config_file).exists():
+                    configs_to_load.append(config_file)
+
+        # 加载并合并所有配置
+        return self.load_multiple(configs_to_load)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        获取配置值(支持点号访问, 如 'train.epochs')
+
+        Args:
+            key: 配置键(支持嵌套)
+            default: 默认值
+
+        Returns:
+            配置值
+        """
+        keys = key.split(".")
+        value = self.config_dict
+
+        for k in keys:
+            if isinstance(value, dict):
+                value = value.get(k)
+                if value is None:
+                    return default
+            else:
+                return default
+
+        return value
+
+    def __getitem__(self, key: str) -> Any:
+        """支持字典索引访问"""
+        return self.config_dict.get(key)

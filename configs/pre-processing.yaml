@@ -1,0 +1,110 @@
+# Pre-Processing Configuration
+# 统一的视频提取、图像清洗、名称标准化配置
+
+# ========== 视频关键帧提取 ==========
+video_extraction:
+  enabled: true
+  
+  # 输入输出目录
+  video_dir: ./raw/video
+  image_output_dir: ./raw/images
+  
+  # 关键帧提取参数
+  extraction_method: ffmpeg         # ffmpeg 或 opencv
+  extraction_script: ./scripts/extract_keyframes.sh
+  
+  # ffmpeg参数
+  frame_rate: 2                      # 每秒提取多少帧 (fps)
+  quality: 85                        # JPEG质量 (1-100)
+  format: jpg                        # 输出格式
+  
+  # 输出文件名模式
+  output_pattern: "extracted_{:06d}.jpg"  # 000001.jpg
+  
+  # 视频文件过滤
+  video_formats:
+    - .mp4
+    - .avi
+    - .mov
+    - .mkv
+  
+  # 缓存设置
+  cache_enabled: true
+  cache_file: ./raw/temp.json
+
+
+# ========== 图像清洗 ==========
+image_cleaning:
+  enabled: true
+  
+  # 输入输出目录
+  image_dir: ./raw/images
+  cleaned_dir: ./raw/images_cleaned  # (可选) 保存清洁后的副本
+  backup_removed: false              # 是否备份被移除的图片
+  backup_dir: ./raw/images_removed
+  
+  # 清洗策略
+  strategies:
+    - validate_format       # 检查格式和完整性
+    - validate_size         # 检查最小分辨率
+    - detect_blur           # 检测和删除模糊图片
+    - remove_duplicates     # 删除重复图片
+  
+  # 格式验证
+  allowed_formats:
+    - jpg
+    - jpeg
+    - png
+    - bmp
+  
+  # 尺寸要求
+  min_width: 320
+  min_height: 320
+  max_width: 4096         # (可选) 超大图片也可能有问题
+  max_height: 4096
+  
+  # 模糊检测参数
+  blur_detection_enabled: true
+  blur_threshold: 100         # Laplacian variance < 100 认为是模糊
+  
+  # 重复图片检测
+  duplicate_detection_enabled: true
+  duplicate_method: perceptual  # perceptual(感知哈希) 或 exact(精确哈希)
+  similarity_threshold: 0.95    # 相似度阈值 (0-1)
+  keep_first: true              # 保留第一张，删除重复的
+  
+  # 输出报告
+  generate_report: true
+  report_file: ./outputs/cleaning_report.json
+
+
+# ========== 图像标准化 ==========
+normalization:
+  enabled: true
+  
+  # 输入输出目录
+  image_dir: ./raw/images
+  rename_in_place: true           # true=直接在原目录重命名, false=复制到新目录
+  output_dir: ./raw/images_normalized  # 如果rename_in_place=false时使用
+  
+  # 命名规则
+  prefix: ""                      # 图片名前缀 (如"traffic_"、"sign_" 或留空)
+  start_index: 1                  # 起始编号
+  padding: 4                      # 编号位数补零 (0001.jpg, 00001.jpg等)
+  
+  # 输出格式
+  output_format: jpg              # jpg, png等
+  preserve_extension: true        # 保留原始扩展名还是转换为output_format
+  
+  # 排序方式
+  sort_order: name                # name(按文件名), size(按大小), date(按修改日期)
+  reverse_sort: false
+  
+  # 映射记录 (用于追踪原始名称)
+  create_mapping: true
+  mapping_file: ./raw/image_mapping.json
+  mapping_format: json            # json 或 csv
+  
+  # 日志
+  log_level: info
+  verbose: true

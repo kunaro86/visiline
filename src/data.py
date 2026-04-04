@@ -69,7 +69,7 @@ class DatasetManager:
 
         # Handle data.yaml - protect against overwriting custom configs
         data_yaml_path = self.data_dir / "data.yaml"
-        
+
         if data_yaml_path.exists() and not force:
             # data.yaml already exists - preserve user's custom configuration
             logger.warning(
@@ -98,7 +98,7 @@ class DatasetManager:
             )
 
         if force:
-            logger.warning(f"⚠️  data.yaml regenerated (--force flag used)")
+            logger.warning("⚠️  data.yaml regenerated (--force flag used)")
         else:
             logger.info(f"✅ data.yaml created at {data_yaml_path}")
 
