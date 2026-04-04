@@ -120,13 +120,12 @@ python main.py export --model-path outputs/weights/best.pt --format tflite
 
 ### 项目文档
 - [快速开始指南](docs/QUICKSTART.md) - 5分钟上手
-- [数据变化处理](docs/DATA_CHANGE_CAPABILITY.md) - 如何处理数据集增长和变化
-- [示例代码](example.py) - 9个实用示例
+- [帮助文档](docs/HELP.md) - 项目完整介绍
+- [数据变化处理](docs/QnA) - 常见问题汇总
 
 ### 外部资源
 - [YOLO 官方文档](https://docs.ultralytics.com/)
 - [GTSRB 数据集](http://benchmark.ini.rub.de/)
-- [YOLO 目标检测](https://en.wikipedia.org/wiki/You_Only_Look_Once)
 
 ## 📝 许可证
 
@@ -136,13 +135,10 @@ MIT License - 详见 LICENSE 文件
 
 欢迎提交Issue和Pull Request！
 
-## ✉️ 联系方式
-
-如有问题或建议，欢迎反馈。
 
 ---
 
-**最后更新**: 2026/04/04
+**最后更新**: 2026/04/05
 
 **版本**: v0.1.0
 
