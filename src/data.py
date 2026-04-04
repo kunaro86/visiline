@@ -30,7 +30,7 @@ class DatasetManager:
         self.val_dir = self.data_dir / "val"
         self.test_dir = self.data_dir / "test"
 
-    def create_yolo_structure(self) -> str:
+    def create_yolo_structure(self, force: bool = False) -> str:
         """
         Create YOLO dataset structure and return path to data.yaml
 
@@ -45,6 +45,9 @@ class DatasetManager:
         └── test/
             ├── images/
             └── labels/
+
+        Args:
+            force: If True, overwrite existing data.yaml. Default is False (safe mode).
 
         Returns:
             Path to data.yaml file
@@ -62,8 +65,24 @@ class DatasetManager:
         for dir_path in dirs:
             dir_path.mkdir(parents=True, exist_ok=True)
 
-        # Create data.yaml
+        logger.info(f"✅ YOLO dataset directories created at {self.data_dir}")
+
+        # Handle data.yaml - protect against overwriting custom configs
         data_yaml_path = self.data_dir / "data.yaml"
+        
+        if data_yaml_path.exists() and not force:
+            # data.yaml already exists - preserve user's custom configuration
+            logger.warning(
+                f"⚠️  {data_yaml_path} already exists. Skipping overwrite to preserve custom config."
+            )
+            logger.info(
+                "   If you need to regenerate it, use --force flag or manually delete:"
+            )
+            logger.info(f"   rm {data_yaml_path}")
+            logger.info("")
+            return str(data_yaml_path)
+
+        # Create or overwrite data.yaml
         data_yaml_content = {
             "path": str(self.data_dir.absolute()),
             "train": "train/images",
@@ -78,8 +97,12 @@ class DatasetManager:
                 data_yaml_content, f, default_flow_style=False, allow_unicode=True
             )
 
-        logger.info(f"YOLO dataset structure created at {self.data_dir}")
-        logger.info(f"data.yaml saved to {data_yaml_path}")
+        if force:
+            logger.warning(f"⚠️  data.yaml regenerated (--force flag used)")
+        else:
+            logger.info(f"✅ data.yaml created at {data_yaml_path}")
+
+        logger.debug(f"   nc: {self.num_classes} classes")
 
         return str(data_yaml_path)
 

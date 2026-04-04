@@ -139,6 +139,11 @@ Examples:
     data_parser.add_argument(
         "--val-ratio", type=float, default=0.1, help="Validation set ratio"
     )
+    data_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force overwrite data.yaml if it exists (use with caution!)",
+    )
 
     # ==================== Validate Command ====================
     validate_parser = subparsers.add_parser("validate", help="Validate model")
@@ -254,7 +259,9 @@ def cmd_prepare_data(args, logger):
     )
 
     logger.info("Creating YOLO dataset structure...")
-    dataset_manager.create_yolo_structure()
+    # Pass force flag to create_yolo_structure
+    force = getattr(args, "force", False)
+    dataset_manager.create_yolo_structure(force=force)
 
     if args.split:
         if not args.images_dir or not args.labels_dir:
@@ -273,10 +280,14 @@ def cmd_prepare_data(args, logger):
     logger.info("Verifying dataset...")
     train_count, val_count, test_count = dataset_manager.verify_dataset()
 
-    logger.info("\nDataset prepared successfully!")
-    logger.info(f"  Training: {train_count}")
-    logger.info(f"  Validation: {val_count}")
-    logger.info(f"  Test: {test_count}")
+    logger.info("\n" + "=" * 60)
+    logger.info("✅ Dataset prepared successfully!")
+    logger.info("=" * 60)
+    logger.info(f"  Training samples:   {train_count}")
+    logger.info(f"  Validation samples: {val_count}")
+    logger.info(f"  Test samples:       {test_count}")
+    logger.info("\n  Next step: python main.py train --config configs/default.yaml")
+    logger.info("=" * 60)
 
     return 0
 

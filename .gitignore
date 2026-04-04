@@ -91,10 +91,6 @@ temp/
 tmp/
 *.tmp
 .cache/
-RUFF_CONFIG_NOTES.md
-PROJECT_COMPLETION_REPORT.md
-CHECKLIST.md
-CONFIG_CONSISTENCY_IMPROVEMENT.md
 
 # =================================================
 # OS

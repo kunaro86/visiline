@@ -67,9 +67,10 @@ ignore = [
 
 # 3. 针对特定文件的忽略 (非常实用)
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "D"]   # 测试文件允许 assert 和 print，不需要文档字符串
-"scripts/**/*.py" = ["E402", "T201"]  # 脚本文件：E402 (sys.path.insert), T201 (print)
-"__init__.py" = ["F401"]          # __init__.py 允许导入但不使用（为了导出）
+"tests/**/*.py" = ["S101", "D"]         # 测试文件允许 assert 和 print，不需要文档字符串
+"scripts/**/*.py" = ["E402", "T201"]    # 脚本文件：E402 (sys.path.insert), T201 (print)
+"main.py" = ["E402", "T201"]            # 同上，main.py 可能包含脚本式代码
+"__init__.py" = ["F401"]                # __init__.py 允许导入但不使用（为了导出）
 
 # 4. 格式化设置 (替代 Black)
 [tool.ruff.format]

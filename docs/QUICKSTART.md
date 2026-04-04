@@ -137,33 +137,52 @@ predictor.save_predictions(
 
 ## 📊 数据格式
 
-### 输入格式
+### 原始数据格式（输入）
+需要用户准备的格式：
+```
+raw/
+├── images/
+│   ├── img1.jpg
+│   └── img2.jpg
+└── labels/
+    ├── img1.txt  # YOLO格式标签
+    └── img2.txt
+```
+
+### 处理后的数据格式（`prepare-data` 后）
+自动生成的YOLO标准格式：
 ```
 data/
-├── train/
+├── train/          # 训练集 (80%)
 │   ├── images/
 │   │   ├── img1.jpg
-│   │   └── img2.jpg
+│   │   └── ...
 │   └── labels/
-│       ├── img1.txt  # YOLO格式
-│       └── img2.txt
-├── val/
+│       ├── img1.txt
+│       └── ...
+├── val/            # 验证集 (10%)
 │   ├── images/
 │   └── labels/
-└── test/
+└── test/           # 测试集 (10%)
     ├── images/
     └── labels/
 ```
 
 ### 标签格式 (YOLO)
+`.txt` 文件中每行代表一个检测框：
+```
+<class_id> <center_x> <center_y> <width> <height>
+```
+- 坐标值为 [0, 1] 范围的相对值
+- 示例：
 ```
 # img1.txt
-<class_id> <center_x> <center_y> <width> <height>
-# 值为 [0, 1] 的相对坐标
-0 0.5 0.5 0.4 0.6
+14 0.5 0.5 0.4 0.6    # 类别14，中心(0.5, 0.5)，宽0.4，高0.6
+0 0.2 0.8 0.3 0.3     # 类别0，中心(0.2, 0.8)，宽0.3，高0.3
 ```
 
 ### 推理输出格式 (JSON)
+模型推理结果保存为JSON格式：
 ```json
 [
   {
