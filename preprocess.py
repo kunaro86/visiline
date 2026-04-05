@@ -247,6 +247,9 @@ def cmd_split_dataset(args, logger):
     config = config_manager.load_yaml(args.config)
 
     split_config = config.get("dataset_split", {})
+    if not split_config:
+        logger.error("[dataset_split] section not found in configuration file")
+        return 1
 
     # Override with command line arguments
     if args.images_dir:
@@ -260,21 +263,55 @@ def cmd_split_dataset(args, logger):
     if args.val_ratio:
         split_config["val_ratio"] = args.val_ratio
 
-    # Create dataset manager
-    data_dir = split_config.get("data_dir", "data")
-    num_classes = split_config.get("num_classes", 43)
+    # Get data directory and resolve num_classes from data.yaml
+    data_dir = split_config.get("data_dir")
+    if not data_dir:
+        logger.error("[dataset_split.data_dir] not specified in config or CLI")
+        return 1
+
+    # Read num_classes from existing data.yaml or fail
+    data_yaml_path = os.path.join(data_dir, "data.yaml")
+    if not os.path.exists(data_yaml_path):
+        logger.error(f"data.yaml not found at {data_yaml_path}")
+        logger.error("Please run: python preprocess.py split-dataset after data preparation")
+        logger.error("or ensure data directory structure is correct")
+        return 1
+
+    data_yaml_config = config_manager.load_yaml(data_yaml_path)
+    num_classes = data_yaml_config.get("nc")
+    if num_classes is None:
+        logger.error(f"[nc] (number of classes) not found in {data_yaml_path}")
+        return 1
+
+    logger.info(f"Using {num_classes} classes from {data_yaml_path}")
     dataset_manager = DatasetManager(data_dir=data_dir, num_classes=num_classes)
 
     logger.info("Creating YOLO dataset structure...")
     force = True
     dataset_manager.create_yolo_structure(force=force)
 
-    # Get split parameters
-    images_dir = split_config.get("raw_images_dir", "./raw/images")
-    labels_dir = split_config.get("raw_labels_dir", "./raw/labels")
-    train_ratio = split_config.get("train_ratio", 0.8)
-    val_ratio = split_config.get("val_ratio", 0.1)
+    # Get split parameters (require explicit configuration, no defaults)
+    images_dir = split_config.get("raw_images_dir")
+    labels_dir = split_config.get("raw_labels_dir")
+    train_ratio = split_config.get("train_ratio")
+    val_ratio = split_config.get("val_ratio")
+
+    # Validate required parameters
+    if not images_dir:
+        logger.error("[dataset_split.raw_images_dir] not specified in config or CLI")
+        return 1
+    if not train_ratio or not val_ratio:
+        logger.error("[dataset_split.train_ratio] and [dataset_split.val_ratio] are required")
+        return 1
+
+    # Calculate test_ratio and validate
     test_ratio = 1.0 - train_ratio - val_ratio
+    if test_ratio < 0 or train_ratio < 0 or val_ratio < 0:
+        logger.error(f"Invalid split ratios: train={train_ratio}, val={val_ratio}, test={test_ratio}")
+        logger.error("Ensure: train_ratio + val_ratio <= 1.0 and all >= 0")
+        return 1
+    if test_ratio < 0.01:
+        logger.warning(f"Test set ratio is very small ({test_ratio:.1%}), consider adjusting")
 
     # Check if images directory exists
     if not os.path.exists(images_dir):

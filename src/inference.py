@@ -1,7 +1,3 @@
-"""
-Inference module for YOLO-TMR project
-"""
-
 import json
 import logging
 from pathlib import Path
@@ -11,28 +7,20 @@ import cv2
 import numpy as np
 
 from .config import Config
-from .model import TrafficSignModel
+from .model import Model
 from .utils import get_traffic_sign_classes
 
 logger = logging.getLogger(__name__)
 
 
 class Predictor:
-    """Traffic sign predictor"""
+    """提供模型推理功能, 包括单张图片、批量图片和视频的预测"""
 
     def __init__(self, config: Config, model_path: str | None = None):
-        """
-        Initialize predictor
 
-        Args:
-            config: Config instance
-            model_path: Path to trained model weights (optional)
-        """
         self.config = config
-        self.model = TrafficSignModel(config.model, config.train.device)
+        self.model = Model(config.model, config.train.device)
 
-        # Load traffic sign classes from configs/data.yaml
-        # Try to find data.yaml in configs directory
         data_yaml_path = Path(config.project_root) / "configs" / "data.yaml"
         self.classes = get_traffic_sign_classes(
             str(data_yaml_path) if data_yaml_path.exists() else None
@@ -44,7 +32,7 @@ class Predictor:
         logger.info("Predictor initialized")
 
     def load_model(self, model_path: str) -> None:
-        """Load trained model weights"""
+
         try:
             self.model.model.load(model_path)  # type: ignore
             logger.info(f"Model loaded from {model_path}")

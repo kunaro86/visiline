@@ -33,7 +33,7 @@ train:
   mixup: 0.0
 
 data:
-  data_dir: "./data"
+  data_dir: "./dataset"
   train_dir: "train"
   val_dir: "val"
   test_dir: "test"

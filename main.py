@@ -154,7 +154,8 @@ def cmd_train(args, logger):
     # Verify dataset
     logger.info("\nVerifying dataset...")
     dataset_manager = DatasetManager(
-        data_dir=str(project_root / "data"), num_classes=config.model.num_classes
+        data_dir=str(project_root / "dataset"),
+        num_classes=config.model.num_classes,  # type: ignore
     )
     train_count, val_count, _test_count = dataset_manager.verify_dataset()
 

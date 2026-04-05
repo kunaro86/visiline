@@ -1,53 +1,29 @@
-"""
-Training module for YOLO-TMR project
-"""
-
 import logging
 import os
+from dataclasses import asdict
 
 from .config import Config
-from .model import TrafficSignModel
+from .model import Model
 from .utils import print_config, set_seed
 
 logger = logging.getLogger(__name__)
 
 
 class Trainer:
-    """Model trainer"""
-
     def __init__(self, config: Config):
-        """
-        Initialize trainer
-
-        Args:
-            config: Config instance
-        """
         self.config = config
         self.model = None
         self.results = None
         self._setup()
 
     def _setup(self) -> None:
-        """Setup training environment"""
-        # Set random seed
+        """设置随机种子, 初始化模型"""
         set_seed(self.config.train.seed)
-
-        # Initialize model
-        self.model = TrafficSignModel(self.config.model, self.config.train.device)
-
+        self.model = Model(self.config.model, self.config.train.device)
         logger.info("Trainer initialized")
 
     def train(self, data_yaml: str, output_dir: str | None = None) -> dict:
-        """
-        Train the model
 
-        Args:
-            data_yaml: Path to data.yaml file
-            output_dir: Output directory for results
-
-        Returns:
-            Training results dictionary
-        """
         if self.model is None:
             raise RuntimeError("Model not initialized")
 
@@ -62,39 +38,24 @@ class Trainer:
         print_config(self.config)
 
         try:
-            # Train model
-            results = self.model.train(
-                data_yaml=data_yaml,
-                epochs=self.config.train.epochs,
-                batch_size=self.config.train.batch_size,
-                imgsz=self.config.train.imgsz,
-                patience=self.config.train.patience,
-                seed=self.config.train.seed,
-                device="0" if self.config.train.device == "cuda" else "cpu",
-                project=output_dir,
-                name="traffic_sign_model",
-                exist_ok=True,
-                save=True,
-                save_period=self.config.train.save_period,
-                optimizer=self.config.train.optimizer,
-                momentum=self.config.train.momentum,
-                weight_decay=self.config.train.weight_decay,
-                lr0=self.config.train.lr0,
-                lrf=self.config.train.lrf,
-                warmup_epochs=self.config.train.warmup_epochs,
-                warmup_momentum=self.config.train.warmup_momentum,
-                augment=self.config.train.augment,
-                mosaic=self.config.train.mosaic,
-                mixup=self.config.train.mixup,
-                hsv_h=self.config.train.hsv_h,
-                hsv_s=self.config.train.hsv_s,
-                hsv_v=self.config.train.hsv_v,
-                degrees=self.config.train.degrees,
-                translate=self.config.train.translate,
-                scale=self.config.train.scale,
-                flipud=self.config.train.flipud,
-                fliplr=self.config.train.fliplr,
-            )
+            # collect core training args into a single dict for clarity
+            train_kwargs = {
+                "data_yaml": data_yaml,
+                "project": output_dir,
+                "name": "traffic_sign_model",
+                "exist_ok": True,
+                "save": True,
+                "device": "0" if self.config.train.device == "cuda" else "cpu",
+            }
+
+            # 从配置类中提取训练相关的参数, 但排除掉不适用于YOLO训练的参数
+            train_dict = asdict(self.config.train)
+            train_dict.pop("val_split", None)
+            train_dict.pop("test_split", None)
+
+            train_kwargs.update(train_dict)
+
+            results = self.model.train(**train_kwargs)
 
             self.results = results
             logger.info("=" * 60)
@@ -108,15 +69,7 @@ class Trainer:
             return {"success": False, "error": str(e)}
 
     def validate(self, data_yaml: str) -> dict:
-        """
-        Validate the model
 
-        Args:
-            data_yaml: Path to data.yaml file
-
-        Returns:
-            Validation results dictionary
-        """
         if self.model is None:
             raise RuntimeError("Model not initialized")
 
@@ -134,14 +87,8 @@ class Trainer:
         self, export_format: str = "onnx", output_path: str | None = None
     ) -> dict:
         """
-        Export trained model
-
-        Args:
-            export_format: Export format (onnx, torchscript, tflite, etc.)
-            output_path: Output path for exported model
-
         Returns:
-            Export result dictionary
+            结果字典, 包含成功标志和导出路径或错误信息
         """
         if self.model is None:
             raise RuntimeError("Model not initialized")

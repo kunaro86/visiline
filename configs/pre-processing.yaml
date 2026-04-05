@@ -108,3 +108,37 @@ normalization:
   # 日志
   log_level: info
   verbose: true
+
+
+# ========== 数据集分割 ==========
+dataset_split:
+  enabled: true
+  
+  # 源数据目录
+  raw_images_dir: ./raw/images      # 输入图像目录（来自提取/清洗/标准化）
+  raw_labels_dir: ./raw/labels      # 输入标签目录（YOLO格式txt）
+  
+  # 输出数据目录
+  data_dir: ./data                  # YOLO格式数据输出根目录
+  
+  # 分割比例
+  train_ratio: 0.8                  # 训练集占比
+  val_ratio: 0.1                    # 验证集占比
+  # test_ratio 自动计算：1.0 - train_ratio - val_ratio
+  
+  # 输出结构
+  # 成功后会创建：
+  # data/
+  # ├── images/
+  # │   ├── train/
+  # │   ├── val/
+  # │   └── test/
+  # ├── labels/
+  # │   ├── train/
+  # │   ├── val/
+  # │   └── test/
+  # └── data.yaml      # YOLO训练配置（nc 类别数从此文件读取）
+  
+  # 日志和报告
+  generate_report: true
+  report_file: ./outputs/split_report.json

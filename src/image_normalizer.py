@@ -1,5 +1,4 @@
 """
-Image normalization module for YOLO-TMR project
 将图片重命名为标准格式 (0001.jpg, 0002.jpg, ...)
 """
 

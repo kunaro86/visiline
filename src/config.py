@@ -1,5 +1,5 @@
 """
-Configuration management for YOLO-TMR project
+Configuration management based on dataclasses, with YAML support
 支持灵活的YAML配置加载(单文件或多文件合并)
 """
 
@@ -14,8 +14,6 @@ import yaml
 
 @dataclass
 class TrainConfig:
-    """Training configuration"""
-
     epochs: int = 100
     batch_size: int = 16
     imgsz: int = 640
@@ -48,43 +46,42 @@ class TrainConfig:
 
 @dataclass
 class ModelConfig:
-    """Model configuration"""
+    """模型配置, 包括模型类型和预训练权重选项, 可通过YAML覆盖"""
 
     model_name: str = "yolov8n"  # nano, small, medium, large, xlarge
-    num_classes: int = 43  # Number of traffic sign classes
+    num_classes: int | None = None  # 必须在配置中指定类别数
     pretrained: bool = True
     task: str = "detect"  # detect or classify
 
 
 @dataclass
 class DataConfig:
-    """Data configuration"""
+    """默认的数据集分割和加载配置, 可通过YAML覆盖"""
 
     data_dir: str = "./data"
     train_dir: str = "train"
     val_dir: str = "val"
     test_dir: str = "test"
-    format: str = "coco"  # or yolo, coco, etc.
+    format: str = "yolo"  # 暂时未支持其他格式
     cache: bool = True
     shuffle: bool = True
 
 
 @dataclass
 class Config:
-    """Main configuration class"""
+    """全局配置类, 提供关于项目结构和默认配置的管理, 支持从YAML文件加载"""
 
     project_root: Path = field(default_factory=lambda: Path(__file__).parent.parent)
     model: ModelConfig = field(default_factory=ModelConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
     data: DataConfig = field(default_factory=DataConfig)
 
-    # Output directories
+    # 输出目录
     output_dir: str | None = None
     weights_dir: str | None = None
     logs_dir: str | None = None
 
     def __post_init__(self):
-        """Setup directory paths after initialization"""
         if self.output_dir is None:
             self.output_dir = str(self.project_root / "outputs")
         if self.weights_dir is None:
@@ -92,14 +89,12 @@ class Config:
         if self.logs_dir is None:
             self.logs_dir = str(self.project_root / "outputs" / "logs")
 
-        # Create directories if they don't exist
         os.makedirs(self.output_dir, exist_ok=True)
         os.makedirs(self.weights_dir, exist_ok=True)
         os.makedirs(self.logs_dir, exist_ok=True)
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "Config":
-        """Load configuration from YAML file"""
         with open(yaml_path, encoding="utf-8") as f:
             config_dict = yaml.safe_load(f)
 
@@ -107,8 +102,17 @@ class Config:
 
     @classmethod
     def from_dict(cls, config_dict: dict[str, Any]) -> "Config":
-        """Create config from dictionary"""
-        model_config = ModelConfig(**config_dict.get("model", {}))
+        model_dict = config_dict.get("model", {})
+
+        # 处理用户命令行覆盖的情况, 确保num_classes必须存在于配置中
+        if "num_classes" not in model_dict:
+            raise ValueError(
+                "[model.num_classes] is required in configuration file. "
+                "Please specify the number of classes in your YAML config. "
+                "Example: model:\n  num_classes: 43"
+            )
+
+        model_config = ModelConfig(**model_dict)
         train_config = TrainConfig(**config_dict.get("train", {}))
         data_config = DataConfig(**config_dict.get("data", {}))
 

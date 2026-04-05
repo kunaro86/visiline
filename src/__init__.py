@@ -6,12 +6,12 @@ __version__ = "0.1.0"
 
 from .config import Config
 from .inference import Predictor
-from .model import TrafficSignModel
+from .model import Model
 from .trainer import Trainer
 
 __all__ = [
     "Config",
+    "Model",
     "Predictor",
-    "TrafficSignModel",
     "Trainer",
 ]

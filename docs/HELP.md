@@ -57,7 +57,7 @@ raw/
 
 ```bash
 # 执行完整的数据处理流程（读取配置一键执行）
-python main.py process-data --config configs/pipeline.yaml
+python preprocess.py pipeline --config configs/pipeline.yaml
 
 ```
 
@@ -66,6 +66,14 @@ python main.py process-data --config configs/pipeline.yaml
 2. 清洗 `raw/images/` 中的所有图像（移除损坏、模糊、重复）
 3. 重命名所有图像为标准格式（0001.jpg, 0002.jpg, ...）
 4. 生成详细的处理报告
+
+处理流程会生成以下辅助文件，用于追踪处理状态：
+
+- **raw/temp.json** - 视频处理缓存（MD5哈希追踪，避免重复处理）
+- **raw/image_mapping.json** - 图像名称映射（原始名→标准化名）
+- **outputs/pipeline_reports/** - 处理报告（包含清洗统计）
+
+这些文件可用于调试和恢复操作。
 
 #### 2.5 分步执行（灵活方法）
 
@@ -90,7 +98,7 @@ python preprocess.py normalize-images --image-dir raw/images/
 
 **configs/pipeline.yaml** - [管道编排配置](configs/pipeline.yaml)
 
-**configs/pre-processing.yaml** - [预处理统一配置](configs/pre-processing.yaml)（视频提取、图像清洗、标准化）
+**configs/pre-processing.yaml** - [预处理统一配置](configs/pre-processing.yaml)（视频提取、图像清洗、标准化、数据集分割）
 
 ### 3. 传统数据准备（从已有的图像和标签）
 

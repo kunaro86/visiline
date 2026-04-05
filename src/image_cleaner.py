@@ -1,5 +1,4 @@
 """
-Image cleaning module for YOLO-TMR project
 实现图片清洗、去重和验证功能
 """
 

@@ -1,7 +1,3 @@
-"""
-Utility functions for YOLO-TMR project
-"""
-
 import logging
 import os
 import random
@@ -38,7 +34,6 @@ def setup_logger(name: str = "yolo-tmr", log_file: str | None = None) -> logging
 
 
 def set_seed(seed: int = 42) -> None:
-    """Set random seed for reproducibility"""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -49,7 +44,6 @@ def set_seed(seed: int = 42) -> None:
 
 
 def get_device(device: str = "cuda") -> torch.device:
-    """Get torch device"""
     if device == "cuda" and torch.cuda.is_available():
         return torch.device("cuda")
     elif device == "cuda":
@@ -59,7 +53,6 @@ def get_device(device: str = "cuda") -> torch.device:
 
 
 def create_dirs(paths: list) -> None:
-    """Create multiple directories"""
     for path in paths:
         os.makedirs(path, exist_ok=True)
 

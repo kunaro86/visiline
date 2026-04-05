@@ -1,7 +1,3 @@
-"""
-Data loading and preprocessing for YOLO-TMR project
-"""
-
 import logging
 import shutil
 from pathlib import Path
@@ -14,15 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetManager:
-    """Manage traffic sign dataset"""
+    """提供数据集管理功能, 包括创建YOLO数据结构、生成data.yaml和验证数据完整性"""
 
     def __init__(self, data_dir: str, num_classes: int = 43):
         """
-        Initialize dataset manager
-
         Args:
-            data_dir: Root directory of dataset
-            num_classes: Number of traffic sign classes
+            data_dir:       YOLO数据集根目录, 包含train/val/test子目录
+            num_classes:    类别数, 用于生成data.yaml中的nc字段
         """
         self.data_dir = Path(data_dir)
         self.num_classes = num_classes
@@ -32,9 +26,9 @@ class DatasetManager:
 
     def create_yolo_structure(self, force: bool = False) -> str:
         """
-        Create YOLO dataset structure and return path to data.yaml
+        创建标准的YOLO数据集结构, 返回data.yaml文件路径
 
-        Expected structure:
+        标准结构:
         dataset/
         ├── train/
         │   ├── images/
@@ -47,12 +41,12 @@ class DatasetManager:
             └── labels/
 
         Args:
-            force: If True, overwrite existing data.yaml. Default is False (safe mode).
+            force: 强制覆盖已存在的data/data.yaml文件 (默认: False)
 
         Returns:
             Path to data.yaml file
         """
-        # Create directories
+
         dirs = [
             self.train_dir / "images",
             self.train_dir / "labels",
@@ -67,11 +61,9 @@ class DatasetManager:
 
         logger.info(f"✅ YOLO dataset directories created at {self.data_dir}")
 
-        # Handle data.yaml - protect against overwriting custom configs
         data_yaml_path = self.data_dir / "data.yaml"
 
         if data_yaml_path.exists() and not force:
-            # data.yaml already exists - preserve user's custom configuration
             logger.warning(
                 f"⚠️  {data_yaml_path} already exists. Skipping overwrite to preserve custom config."
             )
@@ -82,7 +74,6 @@ class DatasetManager:
             logger.info("")
             return str(data_yaml_path)
 
-        # Create or overwrite data.yaml
         data_yaml_content = {
             "path": str(self.data_dir.absolute()),
             "train": "train/images",
@@ -115,21 +106,20 @@ class DatasetManager:
         test_ratio: float = 0.1,
     ) -> None:
         """
-        Split dataset into train/val/test
+        将数据集按照指定比例划分为训练集、验证集和测试集
 
         Args:
-            images_dir: Directory containing images
-            labels_dir: Directory containing labels (YOLO format)
-            train_ratio: Training ratio (default 0.8)
-            val_ratio: Validation ratio (default 0.1)
-            test_ratio: Test ratio (default 0.1)
+            images_dir:     图像文件所在目录
+            labels_dir:     Label文件所在目录 (YOLO格式)
+            train_ratio:    训练集比例 (默认 0.8)
+            val_ratio:      验证集比例 (默认 0.1)
+            test_ratio:     测试集比例 (默认 0.1)
         """
         import random
 
         images_path = Path(images_dir)
         labels_path = Path(labels_dir)
 
-        # Get all image files
         image_files = sorted(
             [
                 f
@@ -142,7 +132,7 @@ class DatasetManager:
             logger.warning(f"No images found in {images_dir}")
             return
 
-        # Shuffle and split
+        # 打乱数据顺序以确保随机划分
         random.shuffle(image_files)
         total = len(image_files)
         train_count = int(total * train_ratio)
@@ -152,7 +142,6 @@ class DatasetManager:
         val_files = image_files[train_count : train_count + val_count]
         test_files = image_files[train_count + val_count :]
 
-        # Copy files
         self._copy_dataset_split(
             train_files, labels_path, self.train_dir, "train", len(train_files)
         )
@@ -176,7 +165,7 @@ class DatasetManager:
         split_name: str,
         count: int,
     ) -> None:
-        """Helper to copy dataset split"""
+
         target_images_dir = target_dir / "images"
         target_labels_dir = target_dir / "labels"
 
@@ -195,18 +184,17 @@ class DatasetManager:
         logger.debug(f"Copied {count} files to {split_name}")
 
     def _get_class_names(self) -> dict:
-        """Get class names for traffic signs from centralized utils
+        """利用utils中的函数获取类别名称
 
         Returns:
-            Dictionary mapping class index to class name
+            类别名称字典 {class_id: class_name}
         """
-        # Load from utils to ensure single source of truth
-        # This will use configs/data.yaml if available, otherwise falls back to defaults
+
         return get_traffic_sign_classes()
 
     def verify_dataset(self) -> tuple[int, int, int]:
         """
-        Verify dataset integrity
+        验证数据集的完整性, 统计训练集、验证集和测试集中的图像数量
 
         Returns:
             Tuple of (train_count, val_count, test_count)
