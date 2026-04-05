@@ -1,37 +1,5 @@
 # YOLO-TMR 快速参考指南
 
-## 📦 项目概览
-
-```
-yolo-tmr/                    # YOLO Traffic Sign Recognition 项目
-├── src/                     # 核心业务逻辑
-│   ├── config.py           # 配置管理系统
-│   ├── model.py            # 模型包装层
-│   ├── trainer.py          # 训练逻辑
-│   ├── inference.py        # 推理模块
-│   ├── data.py             # 数据管理
-│   └── utils.py            # 工具函数
-├── scripts/                # 独立脚本
-│   ├── train.py            # 训练脚本
-│   ├── inference.py        # 推理脚本
-│   └── data_prep.py        # 数据准备脚本
-├── configs/                # 配置文件
-│   ├── default.yaml        # 默认配置
-│   ├── quick.yaml          # 快速测试
-│   ├── production.yaml     # 生产配置
-│   └── data.yaml           # 数据集配置
-├── data/                   # 数据目录
-│   ├── train/               # 训练集
-│   ├── val/                 # 验证集
-│   └── test/                # 测试集
-├── outputs/                # 输出目录
-│   ├── weights/             # 模型权重
-│   └── logs/                # 日志
-├── main.py                 # 统一入口
-├── example.py              # 示例代码
-└── README.md               # 完整文档
-```
-
 ## 🚀 常用命令
 
 ### 准备数据

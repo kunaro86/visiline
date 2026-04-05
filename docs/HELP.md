@@ -57,7 +57,7 @@ raw/
 
 ```bash
 # 执行完整的数据处理流程（读取配置一键执行）
-python preprocess.py pipeline --config configs/pipeline.yaml
+python preprocess.py pipeline --config pipeline.yaml
 
 ```
 
@@ -116,7 +116,7 @@ split-dataset 命令通过配置驱动方式，将图像和标签分割为 train
 python preprocess.py split-dataset --help
 
 # 方式1: 使用配置文件（推荐）
-python preprocess.py split-dataset --config configs/pre-processing.yaml
+python preprocess.py split-dataset --config pre-processing.yaml
 
 # 方式2: 命令行覆盖配置参数
 python preprocess.py split-dataset \
@@ -165,17 +165,17 @@ data/
 
 ```bash
 # 使用默认配置训练（推荐）
-python main.py train --config configs/default.yaml
+python main.py train --config default.yaml
 
 # 快速测试（少量epoch）
-python main.py train --config configs/quick.yaml
+python main.py train --config quick.yaml
 
 # 生产级训练（高精度）
-python main.py train --config configs/production.yaml
+python main.py train --config production.yaml
 
 # 自定义参数
 python main.py train \
-  --config configs/default.yaml \
+  --config default.yaml \
   --epochs 200 \
   --batch-size 32 \
   --device cuda \
@@ -216,7 +216,7 @@ python main.py predict \
 ```bash
 python main.py validate \
   --model-path outputs/weights/best.pt \
-  --data-yaml configs/data.yaml
+  --data-yaml data.yaml
 ```
 
 ### 7. 模型导出
@@ -241,23 +241,24 @@ python main.py export \
 
 ### 初始项目结构
 ```
-yolo-tmr/
-├── main.py                 # 主程序入口
+visiline/
+├── main.py                # 训练推理综合入口
+├── preprocess.py          # 预处理综合入口
 ├── pyproject.toml         # 项目依赖配置
 ├── README.md              # 项目文档
 ├── .gitignore             # Git忽略文件
 │
 ├── src/                   # 核心源代码
 │   ├── __init__.py
-│   ├── config.py          # 配置管理（含ConfigManager）
+│   ├── config.py          # 配置管理
 │   ├── model.py           # 模型封装
 │   ├── trainer.py         # 训练逻辑
 │   ├── inference.py       # 推理模块
 │   ├── data.py            # 数据处理
-│   ├── video_processor.py # 视频关键帧提取（新）
-│   ├── image_cleaner.py   # 图像质量清洗（新）
-│   ├── image_normalizer.py # 图像名称标准化（新）
-│   ├── pipeline.py        # 数据处理流程编排（新）
+│   ├── video_processor.py # 视频关键帧提取
+│   ├── image_cleaner.py   # 图像质量清洗
+│   ├── image_normalizer.py # 图像名称标准化
+│   ├── pipeline.py        # 数据处理流程编排
 │   └── utils.py           # 工具函数
 │
 ├── scripts/               # 脚本文件
@@ -275,6 +276,7 @@ yolo-tmr/
 │   ├── pre-processing.yaml # 预处理统一配置（视频提取、清洗、标准化）
 │
 ├── raw/                   # 原始数据目录（待准备）
+│   ├── weights/           # 预训练权重
 │   ├── video/             # 原始视频文件
 │   ├── images/            # 提取/清洗的图像文件
 │   ├── labels/            # 原始标签文件（可选）
@@ -334,7 +336,7 @@ yolo-tmr/
 
 ## 📊 交通标志类别
 
-项目支持43种交通标志识别（GTSRB数据集标准）：
+项目默认支持43种交通标志识别（GTSRB数据集标准）：
 
 | ID | 类别 | ID | 类别 |
 |----|------|----|----|
@@ -342,7 +344,7 @@ yolo-tmr/
 | 9-18 | 禁行标志 | 33-42 | 指示标志 |
 | 19-21 | 曲线警告标志 | - | - |
 
-详见 [类别映射](src/utils.py#get_traffic_sign_classes)
+详见 [类别映射](../src/utils.py)
 
 ## 📈 训练流程
 
