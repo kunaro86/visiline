@@ -1,12 +1,10 @@
-# YOLO 交通标志识别配置
-# 用于训练和评估的默认配置
-
 # 模型配置
 model:
-  model_name: "yolov8n"     # yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
-  num_classes: 43           # 类别数量
-  pretrained: true          # 使用预训练权重
-  task: "detect"            # 检测任务
+  model_name: "yolov8n"           # yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+  weight_path: "outputs/weights"  # 自定义权重存放目录
+  official_path: "raw/weights"    # 官方预训练权重目录
+  pretrained: true                # true: 从 official_path 寻找/下载; false: 从 weight_path 寻找
+  task: "detect"                  # 检测任务
 
 # 训练配置
 train:
@@ -52,9 +50,9 @@ data:
   train_dir: "train"        # 训练数据子目录
   val_dir: "val"            # 验证数据子目录
   test_dir: "test"          # 测试数据子目录
-  format: "coco"            # 数据集格式
+  format: "yolo"            # 数据集格式
   cache: true               # 在内存中缓存图像
-  shuffle: true             # 打乱数据
+  shuffle: true             # 是否打乱数据
 
 # 输出目录
 output_dir: "./outputs"

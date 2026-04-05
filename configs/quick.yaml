@@ -1,46 +1,54 @@
-# Quick training configuration - for testing/debugging
-# Uses smaller model and fewer epochs for fast validation
-
+# 模型配置
 model:
-  model_name: "yolov8n"  # Nano model for speed
-  num_classes: 43
-  pretrained: true
+  model_name: "yolov8n"           # yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+  weight_path: "outputs/weights"  # 自定义权重存放目录
+  official_path: "raw/weights"    # 官方预训练权重目录
+  pretrained: true                # true: 从 official_path 寻找/下载; false: 从 weight_path 寻找
+  task: "detect"                  # 检测任务
 
+# 训练配置
 train:
-  epochs: 10  # Quick training
-  batch_size: 32  # Larger batch for speed
-  imgsz: 416  # Smaller image size
-  device: "cuda"
-  workers: 2
-  patience: 5  # Shorter patience
-  
-  optimizer: "SGD"
+  epochs: 10                # 训练轮数
+  batch_size: 32            # 批次大小
+  imgsz: 416                # 输入图像尺寸
+  device: "cuda"            # cuda 或 cpu
+  workers: 2                # 数据加载的线程数
+  patience: 5               # 早停法（EarlyStopping）的耐心值
+
+
+  # 优化器设置
+  optimizer: "SGD"          # SGD, Adam 等
   momentum: 0.937
   weight_decay: 0.0005
-  lr0: 0.01
-  lrf: 0.1
+  lr0: 0.01                 # 初始学习率
+  lrf: 0.1                  # 最终学习率 = lr0 * lrf
   warmup_epochs: 1.0
   warmup_momentum: 0.8
+
+
+  seed: 42                  # 用于复现性的随机种子
+  save_period: 5           # 每隔 n 轮保存一次检查点
   
-  seed: 42
-  save_period: 5
-  
+  # 数据划分
   val_split: 0.1
   test_split: 0.1
   
-  augment: false  # Disable augmentation for speed
+  # 数据增强设置
+  augment: true
   mosaic: 0.0
   mixup: 0.0
 
+# 数据配置
 data:
-  data_dir: "./dataset"
-  train_dir: "train"
-  val_dir: "val"
-  test_dir: "test"
-  format: "coco"
-  cache: true
-  shuffle: true
+  data_dir: "./dataset"     # 数据根目录
+  train_dir: "train"        # 训练数据子目录
+  val_dir: "val"            # 验证数据子目录
+  test_dir: "test"          # 测试数据子目录
+  format: "yolo"            # 数据集格式
+  cache: true               # 在内存中缓存图像
+  shuffle: true             # 是否打乱数据
 
+# 输出目录
 output_dir: "./outputs"
 weights_dir: "./outputs/weights"
 logs_dir: "./outputs/logs"

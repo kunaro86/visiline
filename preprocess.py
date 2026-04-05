@@ -1,6 +1,7 @@
 """
-Data Pre-Processing Tool for YOLO-TMR
-处理视频、清洗图像、标准化名称、分割数据集的独立工具
+数据预处理工具入口
+
+包含视频关键帧提取、图像清洗、文件名规范化、以及数据集切分等独立功能模块。
 """
 
 import argparse
@@ -22,7 +23,10 @@ from src.video_processor import VideoProcessor
 
 
 def setup_parser():
-    """Setup argument parser for preprocessing tool"""
+    """创建并返回预处理工具的命令行参数解析器
+
+    仅声明各子命令和参数, 示例与帮助文本保留英文以便 CLI 一致性。
+    """
     parser = argparse.ArgumentParser(
         prog="preprocess",
         description="Data pre-processing tool: video extraction, image cleaning, normalization, dataset splitting",
@@ -173,7 +177,10 @@ Examples:
 
 
 def cmd_pipeline(args, logger):
-    """Pipeline command handler - run complete preprocessing"""
+    """完整预处理流水线的处理函数
+
+    依次执行配置中定义的各个预处理步骤, 返回 0 表示成功。
+    """
     logger.info("Loading pipeline configuration...")
     config_manager = ConfigManager(project_root)
     config = config_manager.load_pipeline_config(args.config)
@@ -188,12 +195,15 @@ def cmd_pipeline(args, logger):
 
 
 def cmd_extract_video(args, logger):
-    """Extract video command handler"""
+    """视频关键帧提取命令处理函数
+
+    读取配置或命令行参数, 初始化 VideoProcessor 并提取所有视频的关键帧。
+    """
     logger.info("Loading configuration...")
     config_manager = ConfigManager(project_root)
     config = config_manager.load_yaml(args.config)
 
-    # Override with command line arguments
+    # 命令行参数覆盖配置文件中的对应字段
     if args.video_dir:
         config["video_extraction"]["video_dir"] = args.video_dir
     if args.output_dir:
@@ -207,12 +217,15 @@ def cmd_extract_video(args, logger):
 
 
 def cmd_clean_images(args, logger):
-    """Clean images command handler"""
+    """图像清洗命令处理函数
+
+    根据配置执行图像质量检查与修复/删除等清洗操作。
+    """
     logger.info("Loading configuration...")
     config_manager = ConfigManager(project_root)
     config = config_manager.load_yaml(args.config)
 
-    # Override with command line arguments
+    # 命令行参数覆盖配置文件中的对应字段
     if args.image_dir:
         config["image_cleaning"]["image_dir"] = args.image_dir
 
@@ -224,12 +237,15 @@ def cmd_clean_images(args, logger):
 
 
 def cmd_normalize_images(args, logger):
-    """Normalize images command handler"""
+    """图像文件名规范化命令处理函数
+
+    将图像文件名重命名为统一格式, 便于后续标注与数据管理。
+    """
     logger.info("Loading configuration...")
     config_manager = ConfigManager(project_root)
     config = config_manager.load_yaml(args.config)
 
-    # Override with command line arguments
+    # 命令行参数覆盖配置文件中的对应字段
     if args.image_dir:
         config["normalization"]["image_dir"] = args.image_dir
 
@@ -241,7 +257,11 @@ def cmd_normalize_images(args, logger):
 
 
 def cmd_split_dataset(args, logger):
-    """Split dataset command handler"""
+    """数据集切分命令处理函数
+
+    根据配置或命令行参数将原始图片与标签切分为 train/val/test, 并创建 YOLO 所需目录结构。
+    对配置完整性做严格校验以避免意外覆盖数据。
+    """
     logger.info("Loading configuration...")
     config_manager = ConfigManager(project_root)
     config = config_manager.load_yaml(args.config)
@@ -251,7 +271,7 @@ def cmd_split_dataset(args, logger):
         logger.error("[dataset_split] section not found in configuration file")
         return 1
 
-    # Override with command line arguments
+    #
     if args.images_dir:
         split_config["raw_images_dir"] = args.images_dir
     if args.labels_dir:
@@ -263,17 +283,19 @@ def cmd_split_dataset(args, logger):
     if args.val_ratio:
         split_config["val_ratio"] = args.val_ratio
 
-    # Get data directory and resolve num_classes from data.yaml
+    # 验证必需的配置字段, 以及数据目录结构是否存在
     data_dir = split_config.get("data_dir")
     if not data_dir:
         logger.error("[dataset_split.data_dir] not specified in config or CLI")
         return 1
 
-    # Read num_classes from existing data.yaml or fail
+    # 读取数据集信息以获取类别数, 这对于后续的目录结构和验证非常重要
     data_yaml_path = os.path.join(data_dir, "data.yaml")
     if not os.path.exists(data_yaml_path):
         logger.error(f"data.yaml not found at {data_yaml_path}")
-        logger.error("Please run: python preprocess.py split-dataset after data preparation")
+        logger.error(
+            "Please run: python preprocess.py split-dataset after data preparation"
+        )
         logger.error("or ensure data directory structure is correct")
         return 1
 
@@ -290,30 +312,36 @@ def cmd_split_dataset(args, logger):
     force = True
     dataset_manager.create_yolo_structure(force=force)
 
-    # Get split parameters (require explicit configuration, no defaults)
+    # 读取切分配置并进行验证
     images_dir = split_config.get("raw_images_dir")
     labels_dir = split_config.get("raw_labels_dir")
     train_ratio = split_config.get("train_ratio")
     val_ratio = split_config.get("val_ratio")
 
-    # Validate required parameters
     if not images_dir:
         logger.error("[dataset_split.raw_images_dir] not specified in config or CLI")
         return 1
     if not train_ratio or not val_ratio:
-        logger.error("[dataset_split.train_ratio] and [dataset_split.val_ratio] are required")
+        logger.error(
+            "[dataset_split.train_ratio] and [dataset_split.val_ratio] are required"
+        )
         return 1
 
-    # Calculate test_ratio and validate
+    # 处理划分比例, 确保总和不超过 1.0, 并警告测试集过小的情况
     test_ratio = 1.0 - train_ratio - val_ratio
+
     if test_ratio < 0 or train_ratio < 0 or val_ratio < 0:
-        logger.error(f"Invalid split ratios: train={train_ratio}, val={val_ratio}, test={test_ratio}")
+        logger.error(
+            f"Invalid split ratios: train={train_ratio}, val={val_ratio}, test={test_ratio}"
+        )
         logger.error("Ensure: train_ratio + val_ratio <= 1.0 and all >= 0")
         return 1
-    if test_ratio < 0.01:
-        logger.warning(f"Test set ratio is very small ({test_ratio:.1%}), consider adjusting")
 
-    # Check if images directory exists
+    if test_ratio < 0.01:
+        logger.warning(
+            f"Test set ratio is very small ({test_ratio:.1%}), consider adjusting"
+        )
+
     if not os.path.exists(images_dir):
         logger.error(f"Images directory not found: {images_dir}")
         logger.error(
@@ -347,7 +375,10 @@ def cmd_split_dataset(args, logger):
 
 
 def main():
-    """Main entry point"""
+    """主入口: 解析命令、初始化日志、分发子命令处理器
+
+    创建必要的输出目录并根据子命令调用相应函数。
+    """
     parser = setup_parser()
     args = parser.parse_args()
 

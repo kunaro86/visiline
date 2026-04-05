@@ -1,6 +1,7 @@
 """
-YOLO Traffic Sign Recognition - Main entry point
-Unified CLI for training, inference, and data preparation
+模型训练、推理和数据准备的统一入口脚本
+
+本文件侧重于命令解析与调度, 不涉及具体模型或数据处理实现
 """
 
 import argparse
@@ -8,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path
+# 将项目根目录加入模块搜索路径, 便于直接 import src 下模块
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
@@ -20,7 +21,10 @@ from src.utils import print_config, setup_logger
 
 
 def setup_parser():
-    """Setup command line argument parser"""
+    """创建并返回命令行参数解析器
+
+    仅负责命令与参数声明, 不执行任何业务逻辑。
+    """
     parser = argparse.ArgumentParser(
         prog="yolo-tmr",
         description="YOLO Traffic Mark Recognition - Training and Deployment",
@@ -130,8 +134,12 @@ Examples:
 
 
 def cmd_train(args, logger):
-    """Train command handler"""
-    # Load configuration
+    """训练命令处理函数
+
+    负责加载配置、检查数据集、构造 Trainer 并启动训练流程。
+    返回进程退出码: 0 表示成功, 非 0 表示失败。
+    """
+    # 加载配置文件(若存在), 否则使用默认配置
     if os.path.exists(args.config):
         config = Config.from_yaml(args.config)
         logger.info(f"Configuration loaded from {args.config}")
@@ -139,7 +147,7 @@ def cmd_train(args, logger):
         config = Config()
         logger.info("Using default configuration")
 
-    # Override config with command line arguments
+    # 使用命令行参数覆盖配置中的对应字段(如果指定了)
     if args.epochs:
         config.train.epochs = args.epochs
     if args.batch_size:
@@ -151,7 +159,7 @@ def cmd_train(args, logger):
 
     print_config(config)
 
-    # Verify dataset
+    # 验证数据集结构和样本数
     logger.info("\nVerifying dataset...")
     dataset_manager = DatasetManager(
         data_dir=str(project_root / "dataset"),
@@ -164,7 +172,7 @@ def cmd_train(args, logger):
         logger.error("Please run: python preprocess.py split-dataset --help")
         return 1
 
-    # Train
+    # 启动训练
     trainer = Trainer(config)
     result = trainer.train(data_yaml=args.data_yaml, output_dir=config.output_dir)
 
@@ -172,7 +180,10 @@ def cmd_train(args, logger):
 
 
 def cmd_predict(args, logger):
-    """Predict command handler"""
+    """推理命令处理函数
+
+    负责加载模型并在指定源上运行推理, 结果可选保存并可视化。
+    """
     config = Config()
 
     logger.info(f"Loading model from {args.model_path}...")
@@ -190,7 +201,7 @@ def cmd_predict(args, logger):
     predictions = result["predictions"]
     logger.info(f"\nFound {sum(len(p['detections']) for p in predictions)} detections")
 
-    # Save results if specified
+    # 如果指定了输出路径, 则保存预测结果
     if args.output:
         predictor.save_predictions(predictions, args.output)
         logger.info(f"Predictions saved to {args.output}")
@@ -199,7 +210,10 @@ def cmd_predict(args, logger):
 
 
 def cmd_validate(args, logger):
-    """Validate command handler"""
+    """验证命令处理函数
+
+    使用 Trainer 的验证方法对数据集进行评估并返回结果状态。
+    """
     config = Config()
     trainer = Trainer(config)
 
@@ -215,7 +229,10 @@ def cmd_validate(args, logger):
 
 
 def cmd_export(args, logger):
-    """Export command handler"""
+    """模型导出命令处理函数
+
+    将指定权重加载到 Trainer 的模型并调用导出接口, 输出导出路径。
+    """
     config = Config()
     trainer = Trainer(config)
     trainer.model.model.load(args.model_path)  # type: ignore
@@ -234,7 +251,10 @@ def cmd_export(args, logger):
 
 
 def cmd_info(args, logger):
-    """Info command handler"""
+    """配置展示命令处理函数
+
+    仅打印并展示配置信息, 便于用户确认参数设置。
+    """
     config = Config.from_yaml(args.config) if os.path.exists(args.config) else Config()
 
     print_config(config)
@@ -242,7 +262,10 @@ def cmd_info(args, logger):
 
 
 def main():
-    """Main entry point"""
+    """主函数: 解析命令并分发到对应的处理函数
+
+    负责创建日志目录并初始化日志组件, 然后根据子命令调用对应的处理器。
+    """
     # Setup parser
     parser = setup_parser()
     args = parser.parse_args()

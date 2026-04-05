@@ -46,17 +46,29 @@ class TrainConfig:
 
 @dataclass
 class ModelConfig:
-    """模型配置, 包括模型类型和预训练权重选项, 可通过YAML覆盖"""
+    """模型配置: 指定模型类型、权重位置和加载策略
+
+    - weight_path: 自定义权重存放目录(相对路径)
+    - official_path: 官方预训练权重存放目录(相对路径)
+    - pretrained: True 时从 official_path 寻找并在需要时下载: False 时从 weight_path 寻找, 缺失则报错
+
+    注意: num_classes 已移除, 应从 configs/data.yaml 读取以避免冲突
+    """
 
     model_name: str = "yolov8n"  # nano, small, medium, large, xlarge
-    num_classes: int | None = None  # 必须在配置中指定类别数
-    pretrained: bool = True
+    weight_path: str = "raw/weights"  # 自定义权重目录
+    official_path: str = "./models"  # 官方预训练权重目录
+    pretrained: bool = (
+        True  # True: 从 official_path 寻找/下载; False: 从 weight_path 寻找
+    )
     task: str = "detect"  # detect or classify
 
 
 @dataclass
 class DataConfig:
-    """默认的数据集分割和加载配置, 可通过YAML覆盖"""
+    """默认的数据集分割和加载配置
+    可通过from_yaml方法读取YAML配置覆盖
+    """
 
     data_dir: str = "./data"
     train_dir: str = "train"
@@ -95,6 +107,7 @@ class Config:
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "Config":
+        """用于读取configs目录下的配置文件, 以及用户指定的自定义配置文件"""
         with open(yaml_path, encoding="utf-8") as f:
             config_dict = yaml.safe_load(f)
 
@@ -102,15 +115,15 @@ class Config:
 
     @classmethod
     def from_dict(cls, config_dict: dict[str, Any]) -> "Config":
+        """核心的配置解析方法, 从字典创建Config实例, 处理嵌套结构和必需字段验证
+
+        注意: num_classes 不再从 model 字段读取, 应从 configs/data.yaml 读取
+        """
+
         model_dict = config_dict.get("model", {})
 
-        # 处理用户命令行覆盖的情况, 确保num_classes必须存在于配置中
-        if "num_classes" not in model_dict:
-            raise ValueError(
-                "[model.num_classes] is required in configuration file. "
-                "Please specify the number of classes in your YAML config. "
-                "Example: model:\n  num_classes: 43"
-            )
+        # 删除模型配置中的 num_classes(如果存在), 避免与 data.yaml 冲突
+        model_dict.pop("num_classes", None)
 
         model_config = ModelConfig(**model_dict)
         train_config = TrainConfig(**config_dict.get("train", {}))

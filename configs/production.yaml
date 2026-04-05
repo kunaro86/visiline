@@ -1,54 +1,63 @@
 # High-performance configuration for production training
 # Uses larger model with comprehensive augmentation
 
+# 模型配置
 model:
-  model_name: "yolov8m"  # Medium model for better accuracy
-  num_classes: 43
-  pretrained: true
+  model_name: "yolov8n"           # yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+  weight_path: "outputs/weights"  # 自定义权重存放目录
+  official_path: "raw/weights"    # 官方预训练权重目录
+  pretrained: true                # true: 从 official_path 寻找/下载; false: 从 weight_path 寻找
+  task: "detect"                  # 检测任务
 
+# 训练配置
 train:
-  epochs: 300  # Extended training
-  batch_size: 16  # Standard batch size
-  imgsz: 640  # Full resolution
-  device: "cuda"
-  workers: 8  # More workers for data loading
-  patience: 50  # Longer patience
-  
-  optimizer: "SGD"
+  epochs: 300               # 训练轮数
+  batch_size: 16            # 批次大小
+  imgsz: 640                # 输入图像尺寸
+  device: "cuda"            # cuda 或 cpu
+  workers: 8                # 数据加载的线程数
+  patience: 50              # 早停法（EarlyStopping）的耐心值
+
+  # 优化器设置
+  optimizer: "SGD"          # SGD, Adam 等
   momentum: 0.937
   weight_decay: 0.0005
-  lr0: 0.01
-  lrf: 0.1
+  lr0: 0.01                 # 初始学习率
+  lrf: 0.1                  # 最终学习率 (lr0 * lrf)
   warmup_epochs: 5.0
   warmup_momentum: 0.8
   
-  seed: 42
-  save_period: 20
+  seed: 42                  # 用于复现性的随机种子
+  save_period: 20           # 每隔 n 轮保存一次检查点
   
+  # 数据划分
   val_split: 0.1
   test_split: 0.1
-  
-  augment: true  # Full augmentation
+
+  # 数据增强设置
+  augment: true
   mosaic: 1.0
-  mixup: 0.1
-  hsv_h: 0.015
-  hsv_s: 0.7
-  hsv_v: 0.4
-  degrees: 15.0
-  translate: 0.15
-  scale: 0.5
-  flipud: 0.0
-  fliplr: 0.5
+  mixup: 0.0
+  hsv_h: 0.015              # HSV-色相 增强
+  hsv_s: 0.7                # HSV-饱和度 增强
+  hsv_v: 0.4                # HSV-亮度 增强
+  degrees: 15.0             # 旋转角度
+  translate: 0.15           # 平移
+  scale: 0.5                # 缩放
+  flipud: 0.0               # 垂直翻转
+  fliplr: 0.5               # 水平翻转概率
 
+# 数据配置
 data:
-  data_dir: "./dataset"
-  train_dir: "train"
-  val_dir: "val"
-  test_dir: "test"
-  format: "coco"
-  cache: true
-  shuffle: true
+  data_dir: "./dataset"     # 数据根目录
+  train_dir: "train"        # 训练数据子目录
+  val_dir: "val"            # 验证数据子目录
+  test_dir: "test"          # 测试数据子目录
+  format: "yolo"            # 数据集格式
+  cache: true               # 在内存中缓存图像
+  shuffle: true             # 是否打乱数据
 
+# 输出目录
 output_dir: "./outputs"
 weights_dir: "./outputs/weights"
 logs_dir: "./outputs/logs"
