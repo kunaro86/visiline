@@ -12,7 +12,7 @@
 
 ### 主要特性
 
-- 🎬 **完整的数据管道**：视频 → 图像清洗 → 标准化 → 数据分割 → 训练
+- 🎬 **完整的数据管道**：视频抽帧 → 图像清洗 → 标准化 → 数据分割 → 训练
 - 🛠️ **配置驱动设计**：所有参数在YAML中定义，支持灵活组合
 - ⚡ **模块化工具**：数据处理和模型训练分离，独立调用
 - 🔧 **灵活的CLI**：支持配置文件或命令行参数两种方式
@@ -54,27 +54,27 @@ uv sync
 
 ```bash
 # 完整流程：视频 → 清洗 → 标准化 → 分割
-python preprocess.py pipeline --config pipeline.yaml
+python preprocess.py pipeline --config configs/pipeline.yaml
 
 # 或分步执行
-python preprocess.py extract-video --config pre-processing.yaml
-python preprocess.py clean-images --config pre-processing.yaml  
-python preprocess.py normalize-images --config pre-processing.yaml
-python preprocess.py split-dataset --config pre-processing.yaml
+python preprocess.py extract-video --config configs/pre-processing.yaml
+python preprocess.py clean-images --config configs/pre-processing.yaml  
+python preprocess.py normalize-images --config configs/pre-processing.yaml
+python preprocess.py split-dataset --config configs/pre-processing.yaml
 
 # 或仅分割已有数据
-python preprocess.py split-dataset --images-dir raw/images --data-dir data
+python preprocess.py split-dataset --images-dir raw/images --data-dir dataset
 ```
 
 ### 3. 模型训练 (使用 main.py)
 
 ```bash
 # 使用默认配置
-python main.py train --config default.yaml
+python main.py train --config configs/default.yaml
 
 # 自定义参数
 python main.py train \
-  --config default.yaml \
+  --config configs/default.yaml \
   --epochs 200 \
   --batch-size 32 \
   --device cuda
@@ -138,8 +138,8 @@ MIT License - 详见 LICENSE 文件
 
 ---
 
-**最后更新**: 2026/04/05
+**最后更新**: 2026/04/07
 
-**版本**: v0.2.0
+**版本**: v0.3.0
 
-**状态**: 流程基本拆分完成
+**状态**: 测试流程基本跑通

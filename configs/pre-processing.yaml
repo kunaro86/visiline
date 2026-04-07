@@ -119,7 +119,7 @@ dataset_split:
   raw_labels_dir: ./raw/labels      # 输入标签目录（YOLO格式txt）
   
   # 输出数据目录
-  data_dir: ./data                  # YOLO格式数据输出根目录
+  data_dir: ./dataset               # YOLO格式数据输出根目录
   
   # 分割比例
   train_ratio: 0.8                  # 训练集占比

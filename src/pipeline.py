@@ -54,14 +54,14 @@ class PipelineManager:
             包含所有步骤的执行结果
         """
         logger.info("\n" + "=" * 70)
-        logger.info("🚀 YOLO-TMR Complete Data Processing Pipeline")
+        logger.info("YOLO-TMR Complete Data Processing Pipeline")
         logger.info("=" * 70)
 
         results = {}
 
         # 第1步: 视频提取
         if "video_extraction" in self.enabled_steps and self.video_processor:
-            logger.info("\n📹 STEP 1: VIDEO FRAME EXTRACTION")
+            logger.info("\nSTEP 1: VIDEO FRAME EXTRACTION")
             logger.info("-" * 70)
             try:
                 result = self.video_processor.extract_all_keyframes()
@@ -72,7 +72,7 @@ class PipelineManager:
 
         # 第2步: 图片清洗
         if "image_cleaning" in self.enabled_steps and self.image_cleaner:
-            logger.info("\n🧹 STEP 2: IMAGE CLEANING")
+            logger.info("\nSTEP 2: IMAGE CLEANING")
             logger.info("-" * 70)
             try:
                 result = self.image_cleaner.clean_all()
@@ -83,7 +83,7 @@ class PipelineManager:
 
         # 第3步: 图片重命名
         if "image_normalization" in self.enabled_steps and self.image_normalizer:
-            logger.info("\n🏷️  STEP 3: IMAGE NORMALIZATION")
+            logger.info("\nSTEP 3: IMAGE NORMALIZATION")
             logger.info("-" * 70)
             try:
                 result = self.image_normalizer.normalize_names()
@@ -94,14 +94,14 @@ class PipelineManager:
 
         # 打印总体结果
         logger.info("\n" + "=" * 70)
-        logger.info("✅ PIPELINE EXECUTION SUMMARY")
+        logger.info("PIPELINE EXECUTION SUMMARY")
         logger.info("=" * 70)
 
         for step, result in results.items():
             if isinstance(result, dict) and "error" in result:
-                logger.error(f"  ❌ {step}: FAILED - {result['error']}")
+                logger.error(f"  [FAIL] {step}: FAILED - {result['error']}")
             else:
-                logger.info(f"  ✅ {step}: SUCCESS")
+                logger.info(f"  [OK] {step}: SUCCESS")
 
         logger.info("=" * 70)
 
@@ -109,9 +109,9 @@ class PipelineManager:
 
     def cleanup_temp_files(self):
         """清理临时文件"""
-        logger.info("\n🗑️  Cleaning up temporary files...")
+        logger.info("\nCleaning up temporary files...")
         try:
             # 这里可以添加清理临时文件的逻辑
-            logger.info("✅ Cleanup completed")
+            logger.info("[OK] Cleanup completed")
         except Exception as e:
             logger.warning(f"Cleanup warning: {e}")

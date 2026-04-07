@@ -1,0 +1,7 @@
+names:
+  0: edge
+nc: 43
+path: C:\Users\Ringtone\_Data\project\visiline\dataset_smoke
+test: test/images
+train: train/images
+val: val/images

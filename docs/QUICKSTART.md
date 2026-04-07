@@ -4,14 +4,15 @@
 
 ### 准备数据
 ```bash
-# 创建YOLO数据结构
-python main.py prepare-data --data-dir data
+# 从原始数据分割（推荐）
+python preprocess.py split-dataset \
+  --config configs/pre-processing.yaml
 
-# 从原始数据分割
-python main.py prepare-data \
-  --split \
+# 或命令行覆盖配置
+python preprocess.py split-dataset \
   --images-dir raw/images \
-  --labels-dir raw/labels
+  --labels-dir raw/labels \
+  --data-dir dataset
 ```
 
 ### 训练模型
@@ -84,7 +85,7 @@ from src.inference import Predictor
 from src.data import DatasetManager
 
 # 1. 准备数据
-manager = DatasetManager("data")
+manager = DatasetManager("dataset")
 manager.create_yolo_structure()
 
 # 2. 训练
@@ -117,10 +118,10 @@ raw/
     └── img2.txt
 ```
 
-### 处理后的数据格式（`prepare-data` 后）
+### 处理后的数据格式（`split-dataset` 后）
 自动生成的YOLO标准格式：
 ```
-data/
+dataset/
 ├── train/          # 训练集 (80%)
 │   ├── images/
 │   │   ├── img1.jpg
@@ -228,15 +229,15 @@ predictor = Predictor(config, "nano_model.pt")
 
 | 操作 | 主脚本 | 源代码 | 配置文件 |
 |-----|--------|--------|---------|
-| 准备数据 | scripts/data_prep.py | src/data.py | - |
-| 训练模型 | scripts/train.py | src/trainer.py | configs/default.yaml |
-| 推理 | scripts/inference.py | src/inference.py | - |
-| 统一命令 | main.py | 所有src文件 | - |
+| 准备数据 | preprocess.py | src/data.py | configs/pre-processing.yaml |
+| 训练模型 | main.py | src/trainer.py | configs/default.yaml |
+| 推理 | main.py | src/inference.py | - |
+| 配置查看 | main.py | src/config.py | configs/default.yaml |
 
 ## 🎓 学习路径
 
 1. **了解配置** → 运行 `python main.py info`
-2. **准备数据** → 运行 `python main.py prepare-data --help`
+2. **准备数据** → 运行 `python preprocess.py split-dataset --help`
 3. **快速测试** → 运行 `python main.py train --config configs/quick.yaml`
 4. **标准训练** → 运行 `python main.py train --config configs/default.yaml`
 5. **推理测试** → 运行 `python main.py predict --model-path outputs/weights/best.pt --source test.jpg`
@@ -254,7 +255,7 @@ predictor = Predictor(config, "nano_model.pt")
 
 - [x] 项目框架建立
 - [x] 核心模块实现 (config, model, trainer, inference, data)
-- [x] 命令行接口 (train, predict, prepare-data, validate, export)
+- [x] 命令行接口 (train, predict, validate, export, preprocess pipeline/split)
 - [x] 配置文件系统 (default, quick, production, data.yaml)
 - [x] 数据管理模块
 - [x] 训练与推理逻辑

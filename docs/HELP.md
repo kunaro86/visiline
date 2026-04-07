@@ -20,7 +20,7 @@ raw/video/*.mp4
     ↓
 [标准化名称] → 0001.jpg, 0002.jpg, ... (standard naming)
     ↓
-[准备数据集] → data/train/val/test (YOLO format)
+[准备数据集] → dataset/train/val/test (YOLO format)
 ```
 
 #### 2.2 必要的依赖
@@ -57,7 +57,7 @@ raw/
 
 ```bash
 # 执行完整的数据处理流程（读取配置一键执行）
-python preprocess.py pipeline --config pipeline.yaml
+python preprocess.py pipeline --config configs/pipeline.yaml
 
 ```
 
@@ -116,13 +116,13 @@ split-dataset 命令通过配置驱动方式，将图像和标签分割为 train
 python preprocess.py split-dataset --help
 
 # 方式1: 使用配置文件（推荐）
-python preprocess.py split-dataset --config pre-processing.yaml
+python preprocess.py split-dataset --config configs/pre-processing.yaml
 
 # 方式2: 命令行覆盖配置参数
 python preprocess.py split-dataset \
   --images-dir raw/images \
   --labels-dir raw/labels \
-  --data-dir data \
+  --data-dir dataset \
   --train-ratio 0.8 \
   --val-ratio 0.1
 ```
@@ -144,7 +144,7 @@ raw/
 
 执行分割后，会自动创建YOLO标准的分割结构：
 ```
-data/
+dataset/
 ├── train/           # 训练集 (80%)
 │   ├── images/
 │   └── labels/
@@ -165,17 +165,17 @@ data/
 
 ```bash
 # 使用默认配置训练（推荐）
-python main.py train --config default.yaml
+python main.py train --config configs/default.yaml
 
 # 快速测试（少量epoch）
-python main.py train --config quick.yaml
+python main.py train --config configs/quick.yaml
 
 # 生产级训练（高精度）
-python main.py train --config production.yaml
+python main.py train --config configs/production.yaml
 
 # 自定义参数
 python main.py train \
-  --config default.yaml \
+  --config configs/default.yaml \
   --epochs 200 \
   --batch-size 32 \
   --device cuda \
@@ -261,11 +261,8 @@ visiline/
 │   ├── pipeline.py        # 数据处理流程编排
 │   └── utils.py           # 工具函数
 │
-├── scripts/               # 脚本文件
-│   ├── train.py           # 训练脚本
-│   ├── inference.py       # 推理脚本
-│   ├── data_prep.py       # 数据准备脚本
-│   └── extract_keyframes.sh # FFmpeg关键帧提取脚本（新）
+├── scripts/               # 外部工具脚本
+│   └── extract_keyframes.sh # FFmpeg关键帧提取脚本（可选）
 │
 ├── configs/               # 配置文件
 │   ├── default.yaml       # 默认配置
@@ -283,7 +280,7 @@ visiline/
 │   ├── temp.json          # 视频处理缓存
 │   └── image_mapping.json # 图像名称映射
 │
-├── data/                  # 数据集目录（分割后）
+├── dataset/               # 数据集目录（分割后）
 │   ├── train/             # 训练集
 │   │   ├── images/
 │   │   └── labels/
@@ -303,7 +300,7 @@ visiline/
 
 ### 文件说明
 - **raw/** - 放置原始的标注数据或视频文件（用户自己准备）
-- **data/** - 执行 `prepare-data` 后自动生成的YOLO格式数据
+- **dataset/** - 执行 `preprocess.py split-dataset` 后自动生成的YOLO格式数据
 - **outputs/** - 训练、推理、导出的结果文件
 
 ## 🔧 配置说明
@@ -351,7 +348,7 @@ visiline/
 ```
 ┌─────────────────┐
 │  1. 数据准备     │
-│  prepare-data   │
+│  split-dataset  │
 └────────┬────────┘
          │
          ▼

@@ -1,0 +1,7 @@
+names:
+  0: edge
+nc: 1
+path: C:\Users\Ringtone\_Data\project\visiline\dataset
+test: test/images
+train: train/images
+val: val/images

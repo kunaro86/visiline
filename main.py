@@ -9,6 +9,8 @@ import os
 import sys
 from pathlib import Path
 
+import yaml
+
 # 将项目根目录加入模块搜索路径, 便于直接 import src 下模块
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
@@ -18,6 +20,27 @@ from src.data import DatasetManager
 from src.inference import Predictor
 from src.trainer import Trainer
 from src.utils import print_config, setup_logger
+
+
+def _read_num_classes(data_yaml: str, logger) -> int:
+    """Read class count from data.yaml; fallback to 43 when unavailable."""
+    if not os.path.exists(data_yaml):
+        logger.warning(f"data.yaml not found at {data_yaml}, fallback nc=43")
+        return 43
+
+    try:
+        with open(data_yaml, encoding="utf-8") as f:
+            data_cfg = yaml.safe_load(f) or {}
+
+        nc = data_cfg.get("nc")
+        if isinstance(nc, int) and nc > 0:
+            return nc
+
+        logger.warning(f"Invalid [nc] in {data_yaml}, fallback nc=43")
+    except Exception as e:
+        logger.warning(f"Failed to read nc from {data_yaml}: {e}")
+
+    return 43
 
 
 def setup_parser():
@@ -120,6 +143,39 @@ Examples:
         "--visualize", action="store_true", help="Visualize predictions"
     )
 
+    # ==================== Validate Command ====================
+    validate_parser = subparsers.add_parser("validate", help="Validate model")
+    validate_parser.add_argument(
+        "--model-path",
+        "-m",
+        type=str,
+        required=True,
+        help="Path to trained model weights",
+    )
+    validate_parser.add_argument(
+        "--data-yaml",
+        type=str,
+        default="configs/data.yaml",
+        help="Path to data.yaml file",
+    )
+
+    # ==================== Export Command ====================
+    export_parser = subparsers.add_parser("export", help="Export model")
+    export_parser.add_argument(
+        "--model-path",
+        "-m",
+        type=str,
+        required=True,
+        help="Path to trained model weights",
+    )
+    export_parser.add_argument(
+        "--format",
+        type=str,
+        default="onnx",
+        choices=["onnx", "torchscript", "tflite"],
+        help="Export format",
+    )
+
     # ==================== Info Command ====================
     info_parser = subparsers.add_parser("info", help="Show configuration")
     info_parser.add_argument(
@@ -161,9 +217,13 @@ def cmd_train(args, logger):
 
     # 验证数据集结构和样本数
     logger.info("\nVerifying dataset...")
+    data_dir = Path(config.data.data_dir)
+    if not data_dir.is_absolute():
+        data_dir = project_root / data_dir
+
     dataset_manager = DatasetManager(
-        data_dir=str(project_root / "dataset"),
-        num_classes=config.model.num_classes,  # type: ignore
+        data_dir=str(data_dir),
+        num_classes=_read_num_classes(args.data_yaml, logger),
     )
     train_count, val_count, _test_count = dataset_manager.verify_dataset()
 

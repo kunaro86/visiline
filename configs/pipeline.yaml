@@ -11,7 +11,7 @@ pipeline:
 
   # 目录配置
   raw_dir: ./raw
-  output_dir: ./data
+  output_dir: ./dataset
   
   # 缓存和日志
   temp_cache_file: ./raw/temp.json

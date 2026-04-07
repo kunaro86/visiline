@@ -46,7 +46,7 @@ Examples:
   %(prog)s normalize-images --config configs/pre-processing.yaml
 
   # Split dataset
-  %(prog)s split-dataset --images-dir raw/images --data-dir data --train-ratio 0.8
+    %(prog)s split-dataset --images-dir raw/images --data-dir dataset --train-ratio 0.8
 
   # Or use config file
   %(prog)s split-dataset --config configs/pre-processing.yaml
@@ -289,21 +289,19 @@ def cmd_split_dataset(args, logger):
         logger.error("[dataset_split.data_dir] not specified in config or CLI")
         return 1
 
-    # 读取数据集信息以获取类别数, 这对于后续的目录结构和验证非常重要
+    # 读取数据集信息以获取类别数; 首次运行若 data.yaml 不存在则先自动创建
     data_yaml_path = os.path.join(data_dir, "data.yaml")
-    if not os.path.exists(data_yaml_path):
-        logger.error(f"data.yaml not found at {data_yaml_path}")
-        logger.error(
-            "Please run: python preprocess.py split-dataset after data preparation"
+    if os.path.exists(data_yaml_path):
+        data_yaml_config = config_manager.load_yaml(data_yaml_path)
+        num_classes = data_yaml_config.get("nc")
+        if num_classes is None:
+            logger.error(f"[nc] (number of classes) not found in {data_yaml_path}")
+            return 1
+    else:
+        num_classes = split_config.get("num_classes", 43)
+        logger.warning(
+            f"data.yaml not found at {data_yaml_path}, creating with nc={num_classes}"
         )
-        logger.error("or ensure data directory structure is correct")
-        return 1
-
-    data_yaml_config = config_manager.load_yaml(data_yaml_path)
-    num_classes = data_yaml_config.get("nc")
-    if num_classes is None:
-        logger.error(f"[nc] (number of classes) not found in {data_yaml_path}")
-        return 1
 
     logger.info(f"Using {num_classes} classes from {data_yaml_path}")
     dataset_manager = DatasetManager(data_dir=data_dir, num_classes=num_classes)
@@ -362,7 +360,7 @@ def cmd_split_dataset(args, logger):
     train_count, val_count, test_count = dataset_manager.verify_dataset()
 
     logger.info("\n" + "=" * 60)
-    logger.info("✅ Dataset split successfully!")
+    logger.info("[OK] Dataset split successfully!")
     logger.info("=" * 60)
     logger.info(f"  Training samples:   {train_count}")
     logger.info(f"  Validation samples: {val_count}")

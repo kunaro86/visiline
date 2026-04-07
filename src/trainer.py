@@ -42,7 +42,7 @@ class Trainer:
             train_kwargs = {
                 "data_yaml": data_yaml,
                 "project": output_dir,
-                "name": "traffic_sign_model",
+                "name": self.config.train.run_name,
                 "exist_ok": True,
                 "save": True,
                 "device": "0" if self.config.train.device == "cuda" else "cpu",
@@ -52,6 +52,12 @@ class Trainer:
             train_dict = asdict(self.config.train)
             train_dict.pop("val_split", None)
             train_dict.pop("test_split", None)
+            train_dict.pop("run_name", None)
+
+            # Ultralytics uses `batch` instead of `batch_size`.
+            batch_size = train_dict.pop("batch_size", None)
+            if batch_size is not None:
+                train_dict["batch"] = batch_size
 
             train_kwargs.update(train_dict)
 

@@ -42,6 +42,7 @@ class TrainConfig:
     scale: float = 0.5  # Scaling
     flipud: float = 0.0  # Vertical flip
     fliplr: float = 0.5  # Horizontal flip
+    run_name: str = "traffic_sign_model"  # Training run directory name
 
 
 @dataclass
@@ -70,7 +71,7 @@ class DataConfig:
     可通过from_yaml方法读取YAML配置覆盖
     """
 
-    data_dir: str = "./data"
+    data_dir: str = "./dataset"
     train_dir: str = "train"
     val_dir: str = "val"
     test_dir: str = "test"
@@ -187,7 +188,13 @@ class ConfigManager:
         """
         filepath = Path(yaml_path)
         if not filepath.is_absolute():
-            filepath = self.configs_dir / filepath
+            # 支持两种相对写法:
+            # 1) "configs/xxx.yaml" (相对项目根目录)
+            # 2) "xxx.yaml" (相对 configs 目录)
+            if filepath.exists():
+                filepath = filepath.resolve()
+            else:
+                filepath = self.configs_dir / filepath
 
         if not filepath.exists():
             raise FileNotFoundError(f"Configuration file not found: {filepath}")
@@ -226,13 +233,16 @@ class ConfigManager:
         # 加载基础配置
         base = self.load_yaml(base_config)
 
-        # 根据base中的enabled_steps, 加载对应的模块配置
-        configs_to_load = [base_config]  # 必须加载基础配置
+        # 必须加载基础配置; 同时优先合并 pre-processing.yaml 作为步骤配置真源
+        configs_to_load = [base_config]
+        preproc_config = "pre-processing.yaml"
+        if (self.configs_dir / preproc_config).exists():
+            configs_to_load.append(preproc_config)
 
         pipeline = base.get("pipeline", {})
         enabled_steps = pipeline.get("enabled_steps", [])
 
-        # 映射步骤到配置文件
+        # 映射步骤到配置文件(兼容按步骤拆分的配置文件布局)
         step_to_file = {
             "video_extraction": "video_extraction.yaml",
             "image_cleaning": "image_cleaning.yaml",

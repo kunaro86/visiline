@@ -59,7 +59,7 @@ class DatasetManager:
         for dir_path in dirs:
             dir_path.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"✅ YOLO dataset directories created at {self.data_dir}")
+        logger.info(f"[OK] YOLO dataset directories created at {self.data_dir}")
 
         data_yaml_path = self.data_dir / "data.yaml"
 
@@ -91,7 +91,7 @@ class DatasetManager:
         if force:
             logger.warning("⚠️  data.yaml regenerated (--force flag used)")
         else:
-            logger.info(f"✅ data.yaml created at {data_yaml_path}")
+            logger.info(f"[OK] data.yaml created at {data_yaml_path}")
 
         logger.debug(f"   nc: {self.num_classes} classes")
 
